@@ -9,18 +9,6 @@ const Navbar = () => {
   const [isAdmin, setisAdmin] = useState()
   const [products, setproducts] = useState([])
   const [menuOpen, setMenuOpen] = useState(false);
-    useEffect(() => {
-      const fetchProducts = async () => {
-        try {
-          const res = await axios.get("/auth/cart-Items")
-          setproducts(res.data.user.cart || [])
-          
-        } catch (error) {
-          console.log(error)
-        }
-      }
-      fetchProducts()
-    })
   useEffect(() => {
     const loginCheck = async () => {
       try {
@@ -28,13 +16,29 @@ const Navbar = () => {
         setloggedIn(true)
         setisAdmin(res.data.user.role==='admin')
       } catch (error) {
-        console.log(error);
-        setloggedIn(false)
-        setisAdmin(false) 
+        if (error.response?.status === 401) {
+        setloggedIn(false);
+        setisAdmin(false);
+        } 
       }
     }
     loginCheck()
   })
+  useEffect(() => {
+      if (!loggedIn) return; // Only fetch if logged in
+      const fetchProducts = async () => {
+        try {
+          const res = await axios.get("/auth/cart-Items", { withCredentials: true });
+          setproducts(res.data.user.cart || []);
+        } catch (error) {
+          if (error.response?.status === 401) {
+            setloggedIn(false);
+            setproducts([]);
+          }
+        }
+      };
+      fetchProducts();
+    },[loggedIn])
   const navigate=useNavigate()
   const logoutHandler=async(e)=>{
     e.preventDefault()

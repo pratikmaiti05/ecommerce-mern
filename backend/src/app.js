@@ -8,8 +8,6 @@ const cors = require('cors');
 app.use(cors({
   origin: [
     'http://localhost:5173',
-    'https://first-ecommerce-fullstack-frontend.onrender.com',
-    'https://first-ecommerce-fullstack-1.onrender.com'
   ],
   credentials: true
 }));

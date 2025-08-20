@@ -10,7 +10,6 @@ const Cart = () => {
       try {
         const res = await axios.get("/auth/cart-Items")
         setProducts(res.data.user.cart || [])
-        console.log(res.data.user.cart);
         
       } catch (error) {
         console.log(error)
