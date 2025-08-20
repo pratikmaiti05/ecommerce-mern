@@ -38,7 +38,7 @@ const Navbar = () => {
         }
       };
       fetchProducts();
-    },[loggedIn])
+    })
   const navigate=useNavigate()
   const logoutHandler=async(e)=>{
     e.preventDefault()
