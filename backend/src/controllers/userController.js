@@ -52,14 +52,22 @@ async function loginHandler(req,res) {
   const token=jwt.sign({
     id:user._id
   },process.env.JWTSECRET_KEY)
-  res.cookie('token',token)
+  res.cookie('token',token,{
+  httpOnly: true,
+  secure: process.env.NODE_ENV === 'production',
+  maxAge: 2*24 * 60 * 60 * 1000
+})
   res.status(201).json({
     message:'User loggedin',
     user
   })
 }
 async function logoutHandler(req,res){
-  res.clearCookie('token')
+    res.clearCookie('token', {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'strict',
+  });
   return res.status(200).json({ message: 'Logout successful!' });
 }
 async function toCart(req,res) {
