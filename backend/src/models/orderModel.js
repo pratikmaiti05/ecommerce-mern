@@ -19,7 +19,11 @@ const orderSchema = new mongoose.Schema({
   },
   paymentMethod: { type: String, enum: ['COD', 'Online'], default: 'COD' },
   total: Number,
-  status: { type: String, default: 'Pending' }
+  status: { 
+    type: String, 
+    enum:['Pending','Delivered','Shipped','Cancelled'],
+    default: 'Pending' 
+  }
 }, { timestamps: true });
 const orderModel=mongoose.model('order',orderSchema)
 module.exports = orderModel

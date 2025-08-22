@@ -7,6 +7,8 @@ const CATEGORIES = ["Men", "Women", "Kids"];
 const SUBCATS = ["Topwear", "Bottomwear", "Winterwear"];
 const SIZES = ["S", "M", "L", "XL"];
 
+const STATUS_OPTIONS = ["Pending", "Shipped", "Delivered", "Cancelled"];
+
 const AdminProducts = () => {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
@@ -17,22 +19,31 @@ const AdminProducts = () => {
   const [image, setImage] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  const [products, setProducts] = useState([]); // store all products
+  const [products, setProducts] = useState([]);
+  const [orders, setOrders] = useState([]); // store all orders
 
   // fetch all products
   const fetchProducts = async () => {
     try {
-      const { data } = await axios.get("/products/getProducts"); // your backend route
+      const { data } = await axios.get("/products/getProducts");
       setProducts(data);
-      console.log(products);
-      
     } catch (err) {
       console.error(err);
     }
   };
-  
+
+  // fetch all orders (UI only, no logic needed now)
+  const fetchOrders = async () => {
+    try {
+      const { data } = await axios.get("/order/allOrders"); 
+      setOrders(data);
+    } catch (err) {
+      console.error(err);
+    }
+  };
   useEffect(() => {
     fetchProducts();
+    fetchOrders();
   }, []);
 
   const toggleSize = (sz) => {
@@ -68,7 +79,7 @@ const AdminProducts = () => {
       setSizes([]);
       setImage(null);
 
-      fetchProducts(); // refresh list
+      fetchProducts(); 
     } catch (err) {
       console.error(err);
       toast.error("Failed to add product");
@@ -79,17 +90,26 @@ const AdminProducts = () => {
 
   const handleRemove = async (id) => {
     try {
-      await axios.delete(`/products/removeProduct/${id}`); // backend expects req.body.id
+      await axios.delete(`/products/removeProduct/${id}`);
       toast.success("Product removed!");
-      fetchProducts(); // refresh list
+      fetchProducts();
     } catch (err) {
       console.error(err);
       toast.error("Failed to remove product");
     }
   };
-
+  const handleStatusChange = async (orderId, newStatus) => {
+    try {
+      await axios.post(`/order/orderStatus/${orderId}`, { status: newStatus });
+      toast.success("Order status updated!");
+      fetchOrders();
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to update order status");
+    }
+  }
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
+    <div className="min-h-screen bg-gray-50 p-6 space-y-8">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Add Product Form */}
         <div className="bg-white p-6 rounded-lg shadow-md">
@@ -185,46 +205,84 @@ const AdminProducts = () => {
           </form>
         </div>
 
-        
         {/* Products List */}
-<div className="bg-white p-6 rounded-lg shadow-md">
-  <h1 className="text-2xl font-semibold mb-6">All Products</h1>
-  <div className="space-y-4 max-h-[70vh] overflow-y-auto">
-    {products.length > 0 ? (
-      products.map((p) => (
-        <div
-          key={p._id}
-          className="flex items-center justify-between border rounded-md p-3 gap-4"
-        >
-          {/* Product Image */}
-          <img
-            src={p.image}
-            alt={p.name}
-            className="w-16 h-16 object-cover rounded-md border"
-          />
-
-          {/* Product Info */}
-          <div className="flex-1">
-            <h2 className="font-medium">{p.name}</h2>
-            <p className="text-sm text-gray-600">${p.price}</p>
+        <div className="bg-white p-6 rounded-lg shadow-md">
+          <h1 className="text-2xl font-semibold mb-6">All Products</h1>
+          <div className="space-y-4 max-h-[70vh] overflow-y-auto">
+            {products.length > 0 ? (
+              products.map((p) => (
+                <div
+                  key={p._id}
+                  className="flex items-center justify-between border rounded-md p-3 gap-4"
+                >
+                  <img
+                    src={p.image}
+                    alt={p.name}
+                    className="w-16 h-16 object-cover rounded-md border"
+                  />
+                  <div className="flex-1">
+                    <h2 className="font-medium">{p.name}</h2>
+                    <p className="text-sm text-gray-600">${p.price}</p>
+                  </div>
+                  <button
+                    onClick={() => handleRemove(p._id)}
+                    className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600"
+                  >
+                    Remove
+                  </button>
+                </div>
+              ))
+            ) : (
+              <p className="text-gray-500">No products found</p>
+            )}
           </div>
-
-          {/* Remove Button */}
-          <button
-            onClick={() => handleRemove(p._id)}
-            className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600"
-          >
-            Remove
-          </button>
         </div>
-      ))
-    ) : (
-      <p className="text-gray-500">No products found</p>
-    )}
-  </div>
-</div>
-
       </div>
+
+      {/* Orders Section */}
+      <div className="bg-white p-6 rounded-lg shadow-md">
+        <h1 className="text-2xl font-semibold mb-6">Manage Orders</h1>
+        <div className="space-y-4 max-h-[70vh] overflow-y-auto">
+          {orders.length > 0 ? (
+            orders.map((order) => (
+              <div
+                key={order._id}
+                className="flex flex-col md:flex-row md:items-center md:justify-between border rounded-md p-4 gap-4"
+              >
+                {/* Order Info */}
+                <div>
+                  <h2 className="font-medium">Order #{order._id}</h2>
+                  <p className="text-sm text-gray-600">
+                    User: {order.shippingInfo?.email || "N/A"}
+                  </p>
+                  <p className="text-sm text-gray-600">
+                    Total: ${order.total}
+                  </p>
+                </div>
+
+                {/* Status Dropdown */}
+                <div className="flex items-center gap-2">
+                  <label className="text-sm text-gray-500">Status:</label>
+                  <select
+                    value={order.status || "Pending"}
+                    className="border rounded-md px-3 py-1"
+                    onChange={(e) => handleStatusChange(order._id, e.target.value)}
+                  >
+                    {STATUS_OPTIONS.map((s) => (
+                      <option key={s} value={s}>
+                        {s}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            ))
+          ) : (
+            <p className="text-gray-500">No orders found</p>
+          )}
+        </div>
+      </div>
+
       <ToastContainer />
     </div>
   );

@@ -32,3 +32,23 @@ exports.getUserOrders = async (req, res) => {
     res.status(500).json({ message: "Failed to fetch orders" });
   }
 };
+exports.allOrders=async(req,res)=>{
+  try {
+    const orders=await orderModel.find();
+    res.json(orders)
+  } catch (error) {
+    res.status(500).json({ message: "Failed to fetch orders" });
+  }
+}
+exports.orderStatus=async(req,res)=>{
+  try {
+    const id=req.params.id
+    const {status}=req.body
+    const order=await orderModel.findById(id)
+    order.status=status
+    await order.save()
+    res.json(order);
+  } catch (error) {
+    res.status(500).json({ message: "Failed to update Status" });
+  }
+}

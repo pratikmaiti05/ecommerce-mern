@@ -34,7 +34,7 @@ const Orders = () => {
               Order ID: {order._id}
             </span>
             <span className="px-3 py-1 text-xs rounded-full bg-gray-100 text-gray-700">
-              {order.status}
+              {order.status==="Delivered" ? "✅ Delivered" : order.status}
             </span>
           </div>
 
