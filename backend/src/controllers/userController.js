@@ -69,7 +69,11 @@ async function loginHandler(req,res) {
   })
 }
 async function logoutHandler(req,res){
-    res.clearCookie('token');
+    res.clearCookie('token',{
+    httpOnly: true,
+    secure: true, // This should be true in production
+    sameSite: 'none', // ✅ ADD THIS LINE
+  });
   return res.status(200).json({ message: 'Logout successful!' });
 }
 async function toCart(req,res) {
